@@ -15,10 +15,10 @@ from azure.monitor.ingestion import LogsIngestionClient
 from azure.monitor.query import LogsQueryClient, LogsQueryStatus
 
 # Define constants for environment variables
-LOGS_WORKSPACE_ID = "7fab0529-6c13-452c-8ec7-5bd11f1e8c15"
-DATA_COLLECTION_ENDPOINT = "https://eurofins-poc-luy3.francecentral-1.ingest.monitor.azure.com"
-LOGS_DCR_RULE_ID = "dcr-64f6b80f117447aaa1b49dd525c8ac9b"
-LOGS_DCR_STREAM_NAME = "Custom-centralizedlogstorage_CL"
+LOGS_WORKSPACE_ID = ""
+DATA_COLLECTION_ENDPOINT = ""
+LOGS_DCR_RULE_ID = ""
+LOGS_DCR_STREAM_NAME = ""
 
 # Configure logging
 logger = logging.getLogger('azure.monitor.ingestion')
@@ -32,7 +32,7 @@ logs_client = LogsQueryClient(credential)
 ingestion_client = LogsIngestionClient(endpoint=DATA_COLLECTION_ENDPOINT, credential=credential, logging_enable=True)
 
 # Define query and time span
-query = """AADNonInteractiveUserSignInLogs | take 100 | project Category, AppDisplayName """
+query = """AADNonInteractiveUserSignInLogs | take 10 | project Category, AppDisplayName """
 start_time = datetime(2024, 1, 11, tzinfo=timezone.utc)
 end_time = datetime(2024, 1, 15, tzinfo=timezone.utc)
 
