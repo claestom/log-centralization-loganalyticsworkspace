@@ -1,0 +1,139 @@
+{
+    "datasource": {
+      "type": "grafana-azure-monitor-datasource",
+      "uid": "${ds}"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "mappings": [
+          {
+            "options": {
+              "0": {
+                "index": 0,
+                "text": "Healthy"
+              },
+              "1": {
+                "index": 1,
+                "text": "Warning"
+              }
+            },
+            "type": "value"
+          },
+          {
+            "options": {
+              "from": 2,
+              "result": {
+                "index": 2,
+                "text": "Unhealthy"
+              },
+              "to": 4
+            },
+            "type": "range"
+          }
+        ],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "#808080",
+              "value": null
+            },
+            {
+              "color": "dark-green",
+              "value": 0
+            },
+            {
+              "color": "dark-yellow",
+              "value": 1
+            },
+            {
+              "color": "dark-red",
+              "value": 2
+            }
+          ]
+        },
+        "color": {
+          "mode": "thresholds"
+        },
+        "links": [],
+        "max": 4,
+        "min": 0
+      },
+      "overrides": []
+    },
+    "gridPos": {
+      "h": 3,
+      "w": 3,
+      "x": 0,
+      "y": 4
+    },
+    "id": 2,
+    "links": [],
+    "options": {
+      "reduceOptions": {
+        "values": false,
+        "calcs": [
+          "max"
+        ],
+        "fields": ""
+      },
+      "orientation": "auto",
+      "textMode": "auto",
+      "colorMode": "background_solid",
+      "graphMode": "none",
+      "justifyMode": "auto"
+    },
+    "pluginVersion": "9.5.13",
+    "targets": [
+      {
+        "azureLogAnalytics": {
+          "query": "let insight_table = InsightsMetrics\r\n| where _ResourceId has '/microsoft.compute/virtualmachines/'\r\n| where Origin == \"vm.azm.ms\"\r\n| where Namespace == \"Processor\" and Name == \"UtilizationPercentage\"\r\n| extend Resource = toupper(tostring(split(_ResourceId,'/')[8]));\r\nAzureMetrics\r\n| where _ResourceId has '/microsoft.compute/virtualmachines/'\r\n| where MetricName in('Percentage CPU', 'Available Memory Bytes', 'VmAvailabilityMetric')\r\n| union kind=outer insight_table\r\n| summarize\r\n  kpi1 = avgif(Average, MetricName == 'Percentage CPU'),\r\n  kpi2 = percentile(Val, 95),\r\n  kpi3 = avgif(Average/1000000000, MetricName == 'Available Memory Bytes'),\r\n  kpi4 = avgif(Average*100, MetricName == 'VmAvailabilityMetric') by _ResourceId, Resource\r\n|extend kpi1 = iff(isnan(kpi1), 0.0, kpi1)\r\n|extend kpi2 = iff(isnan(kpi2), 0.0, kpi2) \r\n|extend kpi3 = iff(isnan(kpi3), 0.0, kpi3) \r\n|extend kpi4 = iff(isnan(kpi4), 0.0, kpi4) \r\n|extend health1 = iff(kpi1>80, 1, 0)\r\n|extend health2 = iff(kpi2>85, 1, 0)\r\n|extend health3 = iff(kpi3<1, 1, 0)\r\n|extend health4 = iff(kpi4<90, 1, 0)\r\n|extend health = health1 + health2 + health3 + health4",
+          "resources": [
+            "/subscriptions/$sub"
+          ]
+        },
+        "azureMonitor": {
+          "allowedTimeGrainsMs": [],
+          "timeGrain": "auto"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${ds}"
+        },
+        "queryType": "Azure Log Analytics",
+        "refId": "A",
+        "subscriptions": [
+          ""
+        ]
+      }
+    ],
+    "title": "Virtual Machines",
+    "transformations": [
+      {
+        "id": "organize",
+        "options": {
+          "excludeByName": {
+            "A": false,
+            "Resource": true,
+            "_ResourceId": true,
+            "health1": true,
+            "health2": true,
+            "health3": true,
+            "health4": true,
+            "kpi1": true,
+            "kpi2": true,
+            "kpi3": true,
+            "kpi4": true
+          },
+          "indexByName": {},
+          "renameByName": {
+            "A": " ",
+            "health": " "
+          }
+        }
+      }
+    ],
+    "transparent": true,
+    "type": "stat"
+  }
